@@ -9,20 +9,20 @@ import "firebase/auth";
 import "firebase/firestore";
 
 export default function Home() {
-	firebaseInit();
-	// if (!firebase.apps.length) {
-	// 	firebase.initializeApp({
-	// 		apiKey: "AIzaSyD3QB5gY6Rgqy1ZPD8Q3KaLUpAjQd21FIo",
-	// 		authDomain: "fir-plus-next.firebaseapp.com",
-	// 		projectId: "fir-plus-next",
-	// 		storageBucket: "fir-plus-next.appspot.com",
-	// 		messagingSenderId: "966496162224",
-	// 		appId: "1:966496162224:web:e2705fe279050f72c20675",
-	// 		measurementId: "G-78D5V650FL",
-	// 	});
-	// } else {
-	// 	firebase.app(); // if already initialized, use that one
-	// }
+	// firebaseInit();
+	if (!firebase.apps.length) {
+		firebase.initializeApp({
+			apiKey: "AIzaSyC4TDoJuZBfcwJzBAKbmZTmfinQczDlIg8",
+			authDomain: "fir-nextjs-todo.firebaseapp.com",
+			projectId: "fir-nextjs-todo",
+			storageBucket: "fir-nextjs-todo.appspot.com",
+			messagingSenderId: "372167901298",
+			appId: "1:372167901298:web:a987b3e552e24d4a2842eb",
+			measurementId: "G-EE7HHDDDGS",
+		});
+	} else {
+		firebase.app(); // if already initialized, use that one
+	}
 
 	const auth = firebase.auth();
 	const provider = new firebase.auth.GoogleAuthProvider();
