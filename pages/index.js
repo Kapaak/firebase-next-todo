@@ -1,65 +1,105 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useEffect, useState } from "react";
+import PopulateData from "../components/PopulateData";
+import Form from "../components/Form";
+//util
+import firebaseInit from "../utils/firebaseInit";
+
+import firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/firestore";
 
 export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+	firebaseInit();
+	// if (!firebase.apps.length) {
+	// 	firebase.initializeApp({
+	// 		apiKey: "AIzaSyD3QB5gY6Rgqy1ZPD8Q3KaLUpAjQd21FIo",
+	// 		authDomain: "fir-plus-next.firebaseapp.com",
+	// 		projectId: "fir-plus-next",
+	// 		storageBucket: "fir-plus-next.appspot.com",
+	// 		messagingSenderId: "966496162224",
+	// 		appId: "1:966496162224:web:e2705fe279050f72c20675",
+	// 		measurementId: "G-78D5V650FL",
+	// 	});
+	// } else {
+	// 	firebase.app(); // if already initialized, use that one
+	// }
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+	const auth = firebase.auth();
+	const provider = new firebase.auth.GoogleAuthProvider();
+	const { serverTimestamp } = firebase.firestore.FieldValue;
+	const db = firebase.firestore();
+	const [user, setUser] = useState(() => auth.currentUser);
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+	useEffect(() => {
+		auth.onAuthStateChanged(user => {
+			if (user) {
+				setUser(user);
+			} else {
+				setUser(null);
+			}
+		});
+	}, []);
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+	const signInWithGoogle = async () => {
+		// const provider = new firebase.auth.GoogleAuthProvider();
+		auth.useDeviceLanguage();
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+		try {
+			await auth.signInWithPopup(provider);
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+	const signOut = async () => {
+		try {
+			await firebase.auth().signOut();
+		} catch (error) {
+			console.log(error.message);
+		}
+	};
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+	const submitData = inputText => {
+		db.collection("things").add({
+			...inputText,
+		});
+	};
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+	function viewData(setData) {
+		const thingsRef = db.collection("things");
+		const unsubscribe = thingsRef
+			.where("uid", "==", user.uid)
+			.onSnapshot(querySnapshot => {
+				const handleArr = [];
+				const items = querySnapshot.docs.map(doc => {
+					handleArr.push(doc.data());
+				});
+				setData(handleArr);
+			});
+	}
+
+	return (
+		<div>
+			<h1>firebase</h1>
+
+			{user ? (
+				<section>
+					<button onClick={signOut}>Sign out with Google</button>
+					<p>The user logged in is: {user.displayName}</p>
+					<p>id: {user.uid}</p>
+				</section>
+			) : (
+				<section>
+					<button onClick={signInWithGoogle}>Sign in with Google</button>
+				</section>
+			)}
+			<section>
+				{user ? <Form user={user} submitData={submitData} /> : null}
+			</section>
+			<section>
+				<h3>Data</h3>
+				{user ? <PopulateData user={user} viewData={viewData} /> : null}
+			</section>
+		</div>
+	);
 }
